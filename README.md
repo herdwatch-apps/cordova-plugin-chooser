@@ -9,7 +9,7 @@ File chooser plugin for Cordova.
 
 Install with Cordova CLI:
 
-	$ cordova plugin add cordova-plugin-chooser
+	$ cordova plugin add @herdwatch/cordova-plugin-chooser
 
 Supported Platforms:
 
