@@ -143,7 +143,7 @@ public class Chooser extends CordovaPlugin {
                             result.put("extension", extension);
                             result.put("size", size);
 
-                            this.callback.success(result);
+                           // this.callback.success(result);
                         } catch (JSONException e) {
                             this.callback.error("JSON Object not supported");
                         }
@@ -191,6 +191,7 @@ public class Chooser extends CordovaPlugin {
 
                 JSONObject result = new JSONObject();
                 result.put("path", outFile.exists() ? "file://" + filePath : "");
+                result.put("pathRaw", uri.toString());
                 result.put("name", getFileName(displayName)); // without extension
                 result.put("displayName", displayName);       // with extension
                 result.put("mimeType", mimeType != null ? mimeType : "application/octet-stream");
