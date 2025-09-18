@@ -5,6 +5,7 @@ import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.ParcelFileDescriptor;
 import android.provider.OpenableColumns;
 import android.webkit.MimeTypeMap;
 
@@ -15,11 +16,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 
 public class Chooser extends CordovaPlugin {
     private static final String ACTION_OPEN = "getFile";
@@ -125,11 +129,13 @@ public class Chooser extends CordovaPlugin {
                             mimeType = "application/octet-stream";
                         }
 
-                        filePath = activity.getCacheDir().getAbsolutePath() + '/' + displayName;
-                        copyInputStreamToFile(inputStream, filePath);
+                         filePath = activity.getCacheDir().getAbsolutePath() + '/' + displayName;
+                         // copyInputStreamToFile(inputStream, filePath);
 
                         try {
+                            copyInputStreamToFileAsync(uri, filePath,  this.getFileName(displayName), mimeType, extension, size,  this.callback);
                             JSONObject result = new JSONObject();
+                            //result.put("path", uri.toString());
                             result.put("path", new File(filePath).exists() ? "file://" + filePath : "");
                             result.put("name",  this.getFileName(displayName)); // without extension
                             result.put("displayName",  displayName); // with extension
@@ -137,7 +143,7 @@ public class Chooser extends CordovaPlugin {
                             result.put("extension", extension);
                             result.put("size", size);
 
-                            this.callback.success(result);
+                           // this.callback.success(result);
                         } catch (JSONException e) {
                             this.callback.error("JSON Object not supported");
                         }
@@ -156,32 +162,66 @@ public class Chooser extends CordovaPlugin {
         }
     }
 
-    private void copyInputStreamToFile(InputStream inputStream, String file) {
-        OutputStream out = null;
-
-        try {
-            out = new FileOutputStream(file);
-            byte[] buf = new byte[1024];
-            int len;
-            while ((len = inputStream.read(buf)) > 0) {
-                out.write(buf, 0, len);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            // Ensure that the InputStreams are closed even if there's an exception.
+    private void copyInputStreamToFileAsync(
+            final Uri uri,
+            final String filePath,
+            final String displayName,
+            final String mimeType,
+            final String extension,
+            final long size,
+            final CallbackContext callback
+    ) {
+        new Thread(() -> {
+            FileChannel inputChannel = null;
+            FileChannel outputChannel = null;
             try {
-                if (out != null) {
-                    out.close();
+                File outFile = new File(cordova.getActivity().getCacheDir(), displayName);
+                ParcelFileDescriptor pfd = cordova.getActivity().getContentResolver().openFileDescriptor(uri, "r");
+                if (pfd == null) {
+                    runOnUi(() -> callback.error("Unable to open file descriptor"));
+                    return;
                 }
 
-                // If you want to close the "in" InputStream yourself then remove this
-                // from here but ensure that you close it yourself eventually.
-                inputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+                inputChannel = new FileInputStream(pfd.getFileDescriptor()).getChannel();
+                outputChannel = new FileOutputStream(outFile).getChannel();
+
+                long transferred = inputChannel.transferTo(0, inputChannel.size(), outputChannel);
+
+
+
+                JSONObject result = new JSONObject();
+                result.put("path", outFile.exists() ? "file://" + filePath : "");
+                result.put("pathRaw", uri.toString());
+                result.put("name", getFileName(displayName)); // without extension
+                result.put("displayName", displayName);       // with extension
+                result.put("mimeType", mimeType != null ? mimeType : "application/octet-stream");
+                result.put("extension", extension != null ? extension : "");
+                result.put("size", size > 0 ? size : outFile.length());
+
+                runOnUi(() -> callback.success(result));
+
+            } catch (OutOfMemoryError oom) {
+                runOnUi(() -> callback.error("Memory error during file copy. Try smaller file or free up memory."));
+            } catch (IOException io) {
+                runOnUi(() -> callback.error("I/O error: " + io.getMessage()));
+            } catch (Exception e) {
+                runOnUi(() -> callback.error("Unexpected error: " + e.toString()));
+            } finally {
+                try {
+                    if (inputChannel != null) inputChannel.close();
+                    if (outputChannel != null) outputChannel.close();
+                } catch (IOException e) {
+                    runOnUi(() -> callback.error("Error closing channels: " + e.getMessage()));
+                }
             }
-        }
+        }).start();
+
+
+    }
+
+    // Utility to run on UI thread
+    private void runOnUi(Runnable runnable) {
+        cordova.getActivity().runOnUiThread(runnable);
     }
 
     public String getFileName(String fileName) {
@@ -190,5 +230,5 @@ public class Chooser extends CordovaPlugin {
         }
         return fileName.substring(0,fileName.lastIndexOf("."));
     }
-
+    
 }
