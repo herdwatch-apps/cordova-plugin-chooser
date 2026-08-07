@@ -1,5 +1,17 @@
 # Chooser
 
+## Why this fork exists
+
+Forked from [upstream](https://github.com/cyph/cordova-plugin-chooser) because we needed a different `getFile()` contract: files are returned as a path + metadata (name, mimeType, extension, size) under an enforced `maxFileSize` limit, instead of being loaded whole into memory as base64 data.
+
+Published as [`@herdwatch/cordova-plugin-chooser`](https://www.npmjs.com/package/@herdwatch/cordova-plugin-chooser).
+
+Changes from upstream:
+- Replaced the `accept` string + `includeData` boolean arguments with a single `options` object (`mimeTypes`, `maxFileSize`), and removed the separate `getFileMetadata()` method.
+- Added a `maxFileSize` check on Android and iOS that rejects the pick with an "Invalid size" error instead of returning oversized files.
+- Changed the return payload from in-memory base64 `data`/`dataURI` to a `path` on disk plus `name`, `displayName`, `mimeType`, `extension`, and `size`.
+- Dropped the `cordova-plugin-add-swift-support` dependency from `plugin.xml`.
+
 ## Demo 
 [cordova-plugin-chooser-lab](https://github.com/MaximBelov/cordova-plugin-chooser-lab)
 
