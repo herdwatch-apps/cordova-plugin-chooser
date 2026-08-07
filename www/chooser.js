@@ -1,7 +1,7 @@
 var exec = require('cordova/exec');
 
 function getFileInternal (options, successCallback, failureCallback) {
-	var chooserOptions = Object.assign({ mimeTypes: '*/*', maxFileSize: 0 }, options);
+	var chooserOptions = Object.assign({ mimeTypes: '*/*', maxFileSize: 0, allowMultiple: false, rawPath: false }, options);
 
 	var result = new Promise(function (resolve, reject) {
 		exec(

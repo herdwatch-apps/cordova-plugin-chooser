@@ -50,6 +50,8 @@ Supported Platforms:
 		mimeType: string;
 		extension: string;
 		size: number;
+		allowMultiple: boolean; //optional, Android Only, default false
+		rawPath: boolean; // optional, Android Only, useful when you are not interested to copy file to temp cache directory, ( can be used for advanced http file transfer) 
 	}>
 
 ## Example Usage
