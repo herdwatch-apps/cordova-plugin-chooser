@@ -1,6 +1,6 @@
 {
   "name": "@herdwatch/cordova-plugin-chooser",
-  "version": "1.4.0-fix.1",
+  "version": "1.4.1",
   "description": "Cordova file chooser plugin",
   "main": "index.js",
   "repository": {
