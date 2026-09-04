@@ -5,6 +5,16 @@ import Foundation
 
 class ChooserUIDocumentPickerViewController : UIDocumentPickerViewController {
 	var maxFileSize: Int = 0
+
+	// The picker has no orientation requirements of its own, so accept every
+	// orientation and let UIKit intersect this with whatever the host app allows.
+	// While presenting a controller UIKit raises UIApplicationInvalidInterfaceOrientation
+	// when the controller's supported orientations share none with the application's
+	// and its shouldAutorotate is true; inheriting UIKit's default mask hit exactly
+	// that on iPad and killed the app instead of showing the picker.
+	override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+		return .all
+	}
 }
 
 @objc(Chooser)

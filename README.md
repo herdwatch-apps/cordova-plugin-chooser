@@ -11,6 +11,7 @@ Changes from upstream:
 - Added a `maxFileSize` check on Android and iOS that rejects the pick with an "Invalid size" error instead of returning oversized files.
 - Changed the return payload from in-memory base64 `data`/`dataURI` to a `path` on disk plus `name`, `displayName`, `mimeType`, `extension`, and `size`.
 - Dropped the `cordova-plugin-add-swift-support` dependency from `plugin.xml`.
+- Declared `supportedInterfaceOrientations` on the iOS picker so it adopts the app's orientations instead of UIKit's default mask, which could be disjoint from them and crash the app on presentation.
 
 ## Demo 
 [cordova-plugin-chooser-lab](https://github.com/MaximBelov/cordova-plugin-chooser-lab)
